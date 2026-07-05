@@ -100,7 +100,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+      <section id="features" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-10 lg:px-8">
         <div className="mb-10 max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Features</p>
           <h2 className="mt-2 text-3xl font-bold text-slate-950">Everything you need to run collections like a pro</h2>
@@ -115,7 +115,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 lg:px-8">
         <div className="mb-10 max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Pricing</p>
           <h2 className="mt-2 text-3xl font-bold text-slate-950">Choose a plan that fits your payment volume</h2>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Providers } from "@/app/providers";
+import { PublicTopBar } from "@/components/layout/PublicTopBar";
 import { getSiteUrl } from "@/lib/seo";
 import "@/app/globals.css";
 
@@ -38,7 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <PublicTopBar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
