@@ -15,12 +15,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
 
   return (
     <label className="block space-y-2" htmlFor={inputId}>
-      {label ? <span className="text-sm font-medium text-slate-700">{label}</span> : null}
+      {label ? <span className="text-sm font-medium text-slate-700/90">{label}</span> : null}
       <input
         ref={ref}
         id={inputId}
         className={cn(
-          "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
+          "w-full rounded-2xl border border-[var(--border-strong)] bg-white/85 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand)]/10",
           error ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100" : "",
           className,
         )}

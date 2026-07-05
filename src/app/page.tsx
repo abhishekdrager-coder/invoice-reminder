@@ -48,35 +48,35 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen">
+    <main className="page-shell min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <section className="mx-auto flex max-w-7xl flex-col gap-14 px-6 py-20 lg:flex-row lg:items-center lg:px-8">
         <div className="max-w-3xl flex-1">
-          <div className="mb-4 inline-flex rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
+          <div className="mb-5 inline-flex rounded-full border border-[var(--border-strong)] bg-white/80 px-4 py-1.5 text-sm font-medium text-[var(--brand-strong)] shadow-[0_10px_30px_-24px_rgba(15,23,42,0.45)]">
             Invoice Copilot for freelancers and finance teams
           </div>
-          <h1 className="text-5xl font-bold tracking-tight text-slate-950 sm:text-6xl">
+          <h1 className="section-title text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
             Stop chasing payments. Start getting paid.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             Centralize invoices, automate reminder sequences, and keep every payment follow-up on-brand with AI-assisted tone rewriting.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href="/signup" className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-soft transition hover:bg-blue-700">
+            <Link href="/signup" className="rounded-2xl bg-[linear-gradient(135deg,#0f6cbd_0%,#0b4f8a_100%)] px-5 py-3 font-semibold text-white shadow-[0_18px_34px_-22px_rgba(15,108,189,0.85)] transition hover:brightness-110">
               Start free
             </Link>
-            <Link href="#pricing" className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white">
+            <Link href="#pricing" className="rounded-2xl border border-[var(--border-strong)] bg-white/75 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white">
               View pricing
             </Link>
           </div>
           <div className="mt-10 grid gap-4 text-sm text-slate-600 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-soft">Automated reminder scheduling</div>
-            <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-soft">Stripe-powered subscriptions</div>
-            <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-soft">Supabase-backed auth and data</div>
+            <div className="glass-panel rounded-3xl p-4">Automated reminder scheduling</div>
+            <div className="glass-panel rounded-3xl p-4">Stripe-powered subscriptions</div>
+            <div className="glass-panel rounded-3xl p-4">Supabase-backed auth and data</div>
           </div>
         </div>
-        <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
-          <div className="rounded-2xl bg-slate-950 p-6 text-white">
+        <div className="glass-panel flex-1 rounded-[2rem] p-8">
+          <div className="rounded-[1.5rem] bg-[linear-gradient(165deg,#102033_0%,#0f6cbd_100%)] p-6 text-white shadow-[0_18px_48px_-30px_rgba(15,23,42,0.9)]">
             <p className="text-sm text-slate-300">Recovered this month</p>
             <p className="mt-2 text-4xl font-bold">$18,420</p>
             <p className="mt-3 text-sm text-slate-300">12 invoices moved from overdue to paid with automated follow-ups.</p>
@@ -88,7 +88,7 @@ export default function HomePage() {
               ["Day +3", "Follow-up with updated tone"],
               ["Day +7", "Escalation with payment request"],
             ].map(([label, copy]) => (
-              <div key={label} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3">
+              <div key={label} className="flex items-center justify-between rounded-3xl border border-[var(--border)] bg-white/85 px-4 py-3 shadow-[0_12px_28px_-26px_rgba(15,23,42,0.6)]">
                 <div>
                   <p className="font-semibold text-slate-900">{label}</p>
                   <p className="text-sm text-slate-500">{copy}</p>
@@ -107,7 +107,7 @@ export default function HomePage() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {features.map((feature) => (
-            <div key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+            <div key={feature.title} className="glass-panel rounded-[1.75rem] p-6">
               <h3 className="text-xl font-semibold text-slate-950">{feature.title}</h3>
               <p className="mt-3 text-slate-600">{feature.description}</p>
             </div>
@@ -124,7 +124,7 @@ export default function HomePage() {
           {PLAN_ORDER.map((planId) => {
             const plan = PLAN_CONFIG[planId];
             return (
-              <div key={plan.id} className="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+              <div key={plan.id} className="glass-panel rounded-[1.9rem] p-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-semibold text-slate-950">{plan.name}</h3>
                   {plan.id === "starter" ? (
@@ -144,7 +144,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/signup" className="mt-8 inline-flex rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white transition hover:bg-slate-800">
+                <Link href="/signup" className="mt-8 inline-flex rounded-2xl bg-slate-950 px-4 py-3 font-semibold text-white transition hover:bg-slate-800">
                   Get started
                 </Link>
               </div>
@@ -154,24 +154,24 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-8">
-        <div className="rounded-[2rem] bg-slate-950 px-8 py-12 text-center text-white shadow-soft">
+        <div className="rounded-[2rem] bg-[linear-gradient(165deg,#102033_0%,#0f6cbd_100%)] px-8 py-12 text-center text-white shadow-[var(--shadow-soft)]">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-200">Ready to automate collections?</p>
           <h2 className="mt-3 text-4xl font-bold">Launch a smarter invoice reminder workflow today.</h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
             Connect Supabase, Stripe, Resend, and OpenAI to turn manual follow-ups into a reliable revenue system.
           </p>
           <div className="mt-8 flex justify-center gap-4">
-            <Link href="/signup" className="rounded-xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-100">
+            <Link href="/signup" className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-100">
               Create account
             </Link>
-            <Link href="/login" className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10">
+            <Link href="/login" className="rounded-2xl border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10">
               Log in
             </Link>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white/80">
+      <footer className="border-t border-[var(--border)] bg-white/75 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-8 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <p>© {new Date().getFullYear()} Invoice Copilot. Recover revenue without awkward follow-ups.</p>
           <div className="flex gap-4">

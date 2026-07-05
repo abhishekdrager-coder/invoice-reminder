@@ -61,21 +61,29 @@ export default function SignupPage() {
 
   return (
     <div>
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Get started</p>
-      <h1 className="mt-2 text-3xl font-bold text-slate-950">Create your Invoice Copilot account</h1>
-      <p className="mt-2 text-sm text-slate-500">Launch a payment reminder workflow in a few minutes.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="kicker text-xs font-semibold uppercase text-[var(--brand)]">Get started</p>
+          <h1 className="section-title mt-3 text-4xl font-semibold leading-none text-slate-950">Create your account</h1>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">Set up a cleaner collections workflow with invoices, reminders, and billing in one place.</p>
+        </div>
+        <div className="hidden rounded-3xl border border-[var(--border)] bg-slate-950 px-4 py-3 text-right text-xs text-slate-100 sm:block">
+          <div className="font-semibold">Live in minutes</div>
+          <div className="mt-1 text-slate-300">Start free, scale later</div>
+        </div>
+      </div>
       {missingCoreEnv ? (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-testid="auth-setup-error">
+        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/90 px-4 py-4 text-sm text-amber-800" data-testid="auth-setup-error">
           Setup required. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment.
         </div>
       ) : null}
       {error ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" data-testid="auth-error" aria-live="polite">
+        <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50/90 px-4 py-4 text-sm text-rose-700" data-testid="auth-error" aria-live="polite">
           {error}
         </div>
       ) : null}
       {success ? (
-        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700" data-testid="auth-success" aria-live="polite">
+        <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50/90 px-4 py-4 text-sm text-emerald-700" data-testid="auth-success" aria-live="polite">
           {success}
         </div>
       ) : null}
@@ -83,7 +91,7 @@ export default function SignupPage() {
         <Input label="Full name" value={values.fullName} error={fieldErrors.fullName} onChange={(event) => setValues((current) => ({ ...current, fullName: event.target.value }))} required />
         <Input label="Email" type="email" value={values.email} error={fieldErrors.email} onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))} required />
         <Input label="Password" type="password" value={values.password} error={fieldErrors.password} onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))} required />
-        <Button type="button" className="w-full" loading={isPending} disabled={missingCoreEnv} onClick={() => void submit()}>Create account</Button>
+        <Button type="button" className="w-full" loading={isPending} onClick={() => void submit()}>Create account</Button>
       </form>
       <p className="mt-6 text-center text-sm text-slate-500">
         Already have an account? <Link href="/login" className="font-medium text-blue-700">Log in</Link>

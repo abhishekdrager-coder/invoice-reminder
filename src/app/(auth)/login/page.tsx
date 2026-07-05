@@ -77,25 +77,33 @@ export default function LoginPage() {
 
   return (
     <div>
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Welcome back</p>
-      <h1 className="mt-2 text-3xl font-bold text-slate-950">Log in to Invoice Copilot</h1>
-      <p className="mt-2 text-sm text-slate-500">Access invoices, reminders, and billing in one workspace.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="kicker text-xs font-semibold uppercase text-[var(--brand)]">Welcome back</p>
+          <h1 className="section-title mt-3 text-4xl font-semibold leading-none text-slate-950">Sign in to your workspace</h1>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">Review invoices, send reminders, and track collections from one calm, focused workspace.</p>
+        </div>
+        <div className="hidden rounded-3xl border border-[var(--border)] bg-[var(--brand-soft)] px-4 py-3 text-right text-xs text-[var(--brand-strong)] sm:block">
+          <div className="font-semibold">Fast follow-ups</div>
+          <div className="mt-1 text-slate-600">No spreadsheet chasing</div>
+        </div>
+      </div>
       {missingCoreEnv ? (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-testid="auth-setup-error">
+        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/90 px-4 py-4 text-sm text-amber-800" data-testid="auth-setup-error">
           Setup required. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment.
         </div>
       ) : null}
       {error ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" data-testid="auth-error" aria-live="polite">
+        <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50/90 px-4 py-4 text-sm text-rose-700" data-testid="auth-error" aria-live="polite">
           {error}
         </div>
       ) : null}
       <form className="mt-8 space-y-4" onSubmit={(event) => event.preventDefault()}>
         <Input label="Email" type="email" value={values.email} error={fieldErrors.email} onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))} required />
         <Input label="Password" type="password" value={values.password} error={fieldErrors.password} onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))} required />
-        <Button type="button" className="w-full" loading={isPending} disabled={missingCoreEnv} onClick={() => void submit()}>Log in</Button>
+        <Button type="button" className="w-full" loading={isPending} onClick={() => void submit()}>Log in</Button>
       </form>
-      <Button type="button" variant="secondary" className="mt-3 w-full" onClick={handleGoogle} loading={isPending} disabled={missingCoreEnv}>
+      <Button type="button" variant="secondary" className="mt-3 w-full" onClick={handleGoogle} loading={isPending}>
         Continue with Google
       </Button>
       <p className="mt-6 text-center text-sm text-slate-500">

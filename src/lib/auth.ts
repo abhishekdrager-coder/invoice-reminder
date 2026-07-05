@@ -22,10 +22,20 @@ export type AuthResponse = {
 
 const authBuckets = new Map<string, number[]>();
 
+function isPlaceholderValue(value: string | undefined) {
+  if (!value) return true;
+  return [
+    "https://your-project-ref.supabase.co",
+    "your-supabase-anon-key",
+    "https://placeholder.supabase.co",
+    "placeholder-anon-key",
+  ].includes(value);
+}
+
 export function getMissingCoreEnv(): string[] {
   const missing: string[] = [];
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missing.push("NEXT_PUBLIC_SUPABASE_URL");
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (isPlaceholderValue(process.env.NEXT_PUBLIC_SUPABASE_URL)) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (isPlaceholderValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   return missing;
 }
 
