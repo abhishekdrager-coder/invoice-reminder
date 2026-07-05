@@ -1,0 +1,24 @@
+import { NextResponse } from "next/server";
+import { requireAdminApiContext } from "@/lib/authorization";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { AppError, handleRouteError } from "@/lib/errors/http";
+import { adminUserToggleSchema } from "@/lib/validation";
+
+export async function POST(request: Request) {
+  try {
+    await requireAdminApiContext();
+    const formData = await request.formData();
+    const parsed = adminUserToggleSchema.safeParse({
+      profileId: String(formData.get("profileId") ?? ""),
+      suspended: String(formData.get("suspended") ?? "false") === "true",
+    });
+    if (!parsed.success) {
+      throw new AppError("Invalid payload", 400, "invalid_payload");
+    }
+
+    await supabaseAdmin.from("profiles").update({ suspended: parsed.data.suspended }).eq("id", parsed.data.profileId);
+    return NextResponse.redirect(new URL("/admin/users", process.env.NEXT_PUBLIC_APP_URL), { status: 303 });
+  } catch (error) {
+    return handleRouteError(error, "admin.users.toggle");
+  }
+}
