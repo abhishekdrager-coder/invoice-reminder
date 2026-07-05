@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import type { AuthFieldErrors, AuthResponse } from "@/lib/auth";
+import { getMissingCoreEnvMessage, type AuthFieldErrors, type AuthResponse } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
 
-  const missingCoreEnv = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const missingCoreEnvMessage = getMissingCoreEnvMessage();
 
   useEffect(() => {
     document.body.dataset.authReady = "true";
@@ -23,6 +23,11 @@ export default function LoginPage() {
   }, []);
 
   const submit = async () => {
+    if (missingCoreEnvMessage) {
+      setError(missingCoreEnvMessage);
+      return;
+    }
+
     setIsPending(true);
     setError("");
     setFieldErrors({});
@@ -88,9 +93,9 @@ export default function LoginPage() {
           <div className="mt-1 text-slate-600">No spreadsheet chasing</div>
         </div>
       </div>
-      {missingCoreEnv ? (
+      {missingCoreEnvMessage ? (
         <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/90 px-4 py-4 text-sm text-amber-800" data-testid="auth-setup-error">
-          Setup required. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment.
+          {missingCoreEnvMessage}
         </div>
       ) : null}
       {error ? (

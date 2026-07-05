@@ -3,6 +3,7 @@ import {
   authJson,
   getClientIp,
   getMissingCoreEnv,
+  getMissingCoreEnvMessage,
   mapAuthError,
   signupSchema,
   validateRateLimit,
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     return authJson(503, {
       success: false,
       message: process.env.NODE_ENV === "development"
-        ? `Core environment variables missing: ${missingCoreEnv.join(", ")}`
+        ? getMissingCoreEnvMessage() ?? `Core environment variables missing: ${missingCoreEnv.join(", ")}`
         : "Authentication is temporarily unavailable.",
     });
   }

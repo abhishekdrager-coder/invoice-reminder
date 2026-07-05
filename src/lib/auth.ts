@@ -39,6 +39,15 @@ export function getMissingCoreEnv(): string[] {
   return missing;
 }
 
+export function getMissingCoreEnvMessage() {
+  const missing = getMissingCoreEnv();
+  if (missing.length === 0) {
+    return null;
+  }
+
+  return `Supabase is not configured. Replace the placeholder values for ${missing.join(" and ")} in .env.local.`;
+}
+
 export function hasCoreEnv() {
   return getMissingCoreEnv().length === 0;
 }
