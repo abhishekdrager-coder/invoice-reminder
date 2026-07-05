@@ -23,11 +23,6 @@ export default function LoginPage() {
   }, []);
 
   const submit = async () => {
-    if (missingCoreEnvMessage) {
-      setError(missingCoreEnvMessage);
-      return;
-    }
-
     setIsPending(true);
     setError("");
     setFieldErrors({});

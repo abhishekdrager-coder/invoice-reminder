@@ -24,11 +24,6 @@ export default function SignupPage() {
   }, []);
 
   const submit = async () => {
-    if (missingCoreEnvMessage) {
-      setError(missingCoreEnvMessage);
-      return;
-    }
-
     setIsPending(true);
     setError("");
     setSuccess("");
