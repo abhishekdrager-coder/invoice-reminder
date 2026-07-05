@@ -35,6 +35,13 @@ npm install
 npm run dev
 ```
 
+## Auth Troubleshooting
+
+- Login and signup use API routes, not Server Actions, to avoid Next.js 16 runtime submit failures.
+- Invalid credentials stay on the same page and render inline errors.
+- If `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` are missing, auth pages show an in-page setup warning instead of a runtime crash.
+- Optional integrations such as OpenAI, Stripe, and Resend do not block auth pages from loading.
+
 ## Project Structure
 
 ```
