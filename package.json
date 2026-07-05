@@ -1,0 +1,53 @@
+{
+  "name": "invoice-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:ci": "npm run lint && npm run typecheck && npm run test:unit && npm run test:integration",
+    "test:ci:full": "npm run test:ci && npm run test:e2e",
+    "db:migrate": "./scripts/db-migrate.sh",
+    "db:seed": "./scripts/db-seed.sh",
+    "db:seed:test": "./scripts/db-seed-test.sh",
+    "admin:bootstrap": "tsx scripts/bootstrap-admin.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "next": "16.2.10",
+    "openai": "^6.45.0",
+    "papaparse": "^5.5.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "resend": "^6.17.1",
+    "stripe": "^22.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "supertest": "^7.2.2",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.0",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
+  }
+}
