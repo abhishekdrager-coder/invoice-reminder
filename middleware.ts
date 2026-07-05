@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isAllowlistModeEnabled, isEmailAllowlisted } from "@/lib/allowlist";
 
+function hasCoreEnv() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 function applySecurityHeaders(response: NextResponse) {
   response.headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.openai.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
@@ -13,6 +17,24 @@ function applySecurityHeaders(response: NextResponse) {
 }
 
 export async function middleware(request: NextRequest) {
+  const isSetupPath = request.nextUrl.pathname === "/setup";
+  if (!hasCoreEnv()) {
+    if (process.env.NODE_ENV === "development" && !isSetupPath) {
+      const setupUrl = request.nextUrl.clone();
+      setupUrl.pathname = "/setup";
+      return applySecurityHeaders(NextResponse.redirect(setupUrl));
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      return applySecurityHeaders(
+        new NextResponse("Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY", {
+          status: 500,
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        }),
+      );
+    }
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -98,5 +120,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/invoices/:path*", "/settings/:path*", "/admin/:path*"],
+  matcher: ["/", "/login", "/signup", "/auth/:path*", "/setup", "/dashboard/:path*", "/invoices/:path*", "/settings/:path*", "/admin/:path*", "/i/:path*"],
 };
