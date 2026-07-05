@@ -4,12 +4,16 @@ import Stripe from "stripe";
 import { env } from "@/lib/env";
 import { handleRouteError } from "@/lib/errors/http";
 import { logAppError } from "@/lib/logger";
-import { stripe } from "@/lib/stripe";
+import {
+  reserveWebhookEventId,
+  STRIPE_ALLOWED_WEBHOOK_EVENTS,
+  verifyStripeWebhookEvent,
+} from "@/lib/stripe-webhook-security";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function mapPriceIdToPlan(priceId: string | null | undefined) {
-  if (priceId === env.NEXT_PUBLIC_STRIPE_PREMIUM_PRO_PRICE_ID) return "premium_pro";
-  if (priceId === env.NEXT_PUBLIC_STRIPE_PREMIUM_LITE_PRICE_ID) return "premium_lite";
+  if (priceId === env.STRIPE_PREMIUM_PRO_PRICE_ID) return "premium_pro";
+  if (priceId === env.STRIPE_PREMIUM_LITE_PRICE_ID) return "premium_lite";
   return "free";
 }
 
@@ -23,12 +27,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    let event;
+    let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
+      event = verifyStripeWebhookEvent(body, signature);
     } catch {
       await logAppError({ level: "warn", context: "stripe.webhook", message: "Invalid stripe signature" });
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+
+    if (!STRIPE_ALLOWED_WEBHOOK_EVENTS.has(event.type)) {
+      return NextResponse.json({ ignored: true }, { status: 200 });
+    }
+
+    const firstSeen = await reserveWebhookEventId(event.id);
+    if (!firstSeen) {
+      await logAppError({ level: "warn", context: "stripe.webhook", message: "Replay event ignored", metadata: { eventId: event.id } });
+      return NextResponse.json({ replay: true }, { status: 200 });
     }
 
     if (event.type === "checkout.session.completed") {
@@ -82,6 +96,22 @@ export async function POST(request: Request) {
           metadata: { subscriptionId: sub.id, error: error.message },
         });
       }
+    }
+
+    if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscription = (invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null }).subscription;
+      await logAppError({
+        level: event.type === "invoice.payment_failed" ? "warn" : "info",
+        context: "stripe.webhook",
+        message: event.type,
+        metadata: {
+          eventId: event.id,
+          invoiceId: invoice.id,
+          customer: invoice.customer,
+          subscription,
+        },
+      });
     }
 
     return NextResponse.json({ received: true });

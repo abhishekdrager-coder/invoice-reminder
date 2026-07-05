@@ -51,6 +51,11 @@ export default async function BillingPage() {
             You hit free plan limits. <a href="/settings/billing" className="underline">Upgrade to remove limits and ads</a>.
           </p>
         ) : null}
+        {premium ? (
+          <form action="/api/stripe/portal" method="POST" className="mt-3">
+            <button className="rounded border border-stone-300 px-3 py-1 text-xs hover:bg-stone-100">Manage subscription in Stripe Portal</button>
+          </form>
+        ) : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
