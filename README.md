@@ -33,7 +33,7 @@ Invoice Copilot is a Next.js SaaS app for automating invoice reminders with plan
 - Resend account
 - OpenAI API key
 
-## Setup
+## Local setup
 
 1. Install dependencies:
 
@@ -47,33 +47,18 @@ npm install
 cp .env.example .env.local
 ```
 
-3. Fill required environment variables in .env.local:
+3. Fill the two required Supabase values in .env.local:
 
-- NEXT_PUBLIC_APP_URL
 - NEXT_PUBLIC_SUPABASE_URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- STRIPE_SECRET_KEY
-- STRIPE_WEBHOOK_SECRET
-- STRIPE_PREMIUM_LITE_PRICE_ID
-- STRIPE_PREMIUM_PRO_PRICE_ID
-- STRIPE_WEBHOOK_TOLERANCE_SECONDS
-- RESEND_API_KEY
-- EMAIL_FROM
-- OPENAI_API_KEY
-- OPENAI_MODEL
-- CRON_SECRET
-- INBOUND_SECRET
-- SHOW_ADS
-- CRON_ALLOWLIST_IPS
-- ALLOWLIST_MODE
-- ALLOWLIST_EMAILS
-- CSRF_SECRET
-- BILLING_CHALLENGE_ENABLED
-- BILLING_CHALLENGE_THRESHOLD
-- BILLING_CHALLENGE_TOKEN
-- ADMIN_BOOTSTRAP_EMAIL (optional)
-- OWNER_ADMIN_EMAIL (optional)
+
+4. Restart the dev server:
+
+```bash
+npm run dev
+```
+
+Optional integrations such as Stripe, Resend, OpenAI, and Cron can be added later when you enable those flows.
 
 ## Database Migrations and Seed
 
