@@ -73,8 +73,8 @@ export default function SignupPage() {
         </div>
       </div>
       {missingCoreEnvMessage ? (
-        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/90 px-4 py-4 text-sm text-amber-800" data-testid="auth-setup-error">
-          {missingCoreEnvMessage}
+        <div className="mt-6 rounded-3xl border border-sky-200 bg-sky-50/90 px-4 py-4 text-sm text-sky-800" data-testid="auth-setup-error">
+          Demo mode: Supabase isn&apos;t connected yet, so your account uses a local session and data isn&apos;t saved.
         </div>
       ) : null}
       {error ? (

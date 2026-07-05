@@ -104,8 +104,8 @@ export function mapAuthError(kind: "login" | "signup" | "google", message: strin
   return { status: 500, message: "Something went wrong. Please try again." };
 }
 
-export function authJson(status: number, body: AuthResponse) {
-  return Response.json(body, { status });
+export function authJson(status: number, body: AuthResponse, headers?: Record<string, string>) {
+  return Response.json(body, { status, headers });
 }
 
 export function getClientIp(request: Request) {

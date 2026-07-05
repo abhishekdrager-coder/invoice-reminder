@@ -2,9 +2,10 @@ import { signOut } from "@/app/(auth)/actions";
 
 type HeaderProps = {
   userEmail?: string;
+  demoMode?: boolean;
 };
 
-export function Header({ userEmail }: HeaderProps) {
+export function Header({ userEmail, demoMode }: HeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-[var(--border)] bg-white/65 px-6 py-5 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -12,6 +13,9 @@ export function Header({ userEmail }: HeaderProps) {
         <h1 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-slate-950">Stay ahead of every invoice follow-up</h1>
       </div>
       <div className="flex items-center gap-3">
+        {demoMode ? (
+          <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">Demo mode</span>
+        ) : null}
         <div className="rounded-2xl border border-[var(--border-strong)] bg-white/85 px-4 py-2.5 text-sm text-slate-600 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.3)]">{userEmail ?? "Signed in"}</div>
         <form action={signOut}>
           <button type="submit" className="rounded-2xl border border-[var(--border-strong)] bg-white/85 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/30">

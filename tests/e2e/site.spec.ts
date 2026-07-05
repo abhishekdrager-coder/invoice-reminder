@@ -31,3 +31,15 @@ test("seo endpoints respond with expected content", async ({ page }) => {
   expect(manifest.ok()).toBe(true);
   await expect(manifest.text()).resolves.toContain("Invoice Copilot");
 });
+
+test("demo login reaches dashboard without Supabase configured", async ({ page }) => {
+  await page.goto("/login");
+  await page.waitForFunction(() => document.body.dataset.authReady === "true");
+  await page.getByLabel("Email").fill("demo@example.com");
+  await page.getByLabel("Password").fill("password123");
+  await page.getByRole("button", { name: "Log in" }).click();
+
+  await page.waitForURL(/\/dashboard$/, { timeout: 20_000 });
+  await expect(page.getByText("Recent invoices")).toBeVisible();
+  await expect(page.getByText("Demo mode")).toBeVisible();
+});

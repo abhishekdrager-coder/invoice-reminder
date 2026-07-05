@@ -1,8 +1,16 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { authJson, getMissingCoreEnv, mapAuthError } from "@/lib/auth";
+import { isSupabasePlaceholderEnv } from "@/lib/demo-session";
 import { withBaseUrl } from "@/lib/utils";
 
 export async function POST() {
+  if (isSupabasePlaceholderEnv()) {
+    return authJson(400, {
+      success: false,
+      message: "Google sign-in requires Supabase configuration. Use email sign-in, which works in demo mode.",
+    });
+  }
+
   const missingCoreEnv = getMissingCoreEnv();
   if (missingCoreEnv.length > 0) {
     return authJson(503, {

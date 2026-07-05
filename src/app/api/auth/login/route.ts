@@ -9,18 +9,9 @@ import {
   validateRateLimit,
   zodFieldErrors,
 } from "@/lib/auth";
+import { demoSessionSetCookie, encodeDemoSession, isDemoAuthEnabled } from "@/lib/demo-session";
 
 export async function POST(request: Request) {
-  const missingCoreEnv = getMissingCoreEnv();
-  if (missingCoreEnv.length > 0) {
-    return authJson(503, {
-      success: false,
-      message: process.env.NODE_ENV === "development"
-        ? getMissingCoreEnvMessage() ?? `Core environment variables missing: ${missingCoreEnv.join(", ")}`
-        : "Authentication is temporarily unavailable.",
-    });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -34,6 +25,24 @@ export async function POST(request: Request) {
       success: false,
       message: parsed.error.issues[0]?.message ?? "Please fix the highlighted fields.",
       fieldErrors: zodFieldErrors(parsed.error),
+    });
+  }
+
+  if (isDemoAuthEnabled()) {
+    return authJson(
+      200,
+      { success: true, message: "Signed in with a local demo session.", redirectTo: "/dashboard" },
+      { "set-cookie": demoSessionSetCookie(encodeDemoSession({ email: parsed.data.email })) },
+    );
+  }
+
+  const missingCoreEnv = getMissingCoreEnv();
+  if (missingCoreEnv.length > 0) {
+    return authJson(503, {
+      success: false,
+      message: process.env.NODE_ENV === "development"
+        ? getMissingCoreEnvMessage() ?? `Core environment variables missing: ${missingCoreEnv.join(", ")}`
+        : "Authentication is temporarily unavailable.",
     });
   }
 

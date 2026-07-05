@@ -1,26 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import type { User } from "@supabase/supabase-js";
 
+import { DEMO_SESSION_COOKIE, decodeDemoSession, isSupabasePlaceholderEnv } from "@/lib/demo-session";
 import type { Database } from "@/types";
-
-function hasConfiguredCoreEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL
-    && process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://your-project-ref.supabase.co"
-    && process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://placeholder.supabase.co"
-    && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "your-supabase-anon-key"
-    && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "placeholder-anon-key",
-  );
-}
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
 
-  if (!hasConfiguredCoreEnv()) {
-    return { response, user: null };
+  if (isSupabasePlaceholderEnv()) {
+    const demo = decodeDemoSession(request.cookies.get(DEMO_SESSION_COOKIE)?.value ?? null);
+    const user = demo ? ({ id: demo.id, email: demo.email } as unknown as User) : null;
+    return { response, user };
   }
 
   const supabase = createServerClient<Database>(
