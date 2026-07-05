@@ -6,6 +6,8 @@ const freeEmail = process.env.E2E_FREE_EMAIL;
 const freePassword = process.env.E2E_FREE_PASSWORD;
 const premiumEmail = process.env.E2E_PREMIUM_EMAIL;
 const premiumPassword = process.env.E2E_PREMIUM_PASSWORD;
+const ownerEmail = process.env.E2E_OWNER_EMAIL;
+const ownerPassword = process.env.E2E_OWNER_PASSWORD;
 
 test.skip(!email || !password, "Set E2E_EMAIL and E2E_PASSWORD to run authenticated happy path.");
 
@@ -90,4 +92,35 @@ test("run reminders cron endpoint", async ({ request }) => {
     headers: { authorization: `Bearer ${cronSecret}` },
   });
   expect([200, 500]).toContain(response.status());
+});
+
+test("owner can access admin security", async ({ page }) => {
+  test.skip(!ownerEmail || !ownerPassword, "Set E2E_OWNER_EMAIL and E2E_OWNER_PASSWORD.");
+  await loginAs(page, ownerEmail!, ownerPassword!);
+  await page.goto("/admin/security");
+  await expect(page.getByRole("heading", { name: "Security Administration" })).toBeVisible();
+});
+
+test("normal user cannot access admin security", async ({ page }) => {
+  await login(page);
+  await page.goto("/admin/security");
+  await expect(page).toHaveURL(/admin\/overview|dashboard/);
+});
+
+test("upgrade to premium removes ads and unlocks limits", async ({ page }) => {
+  test.skip(!premiumEmail || !premiumPassword, "Set E2E_PREMIUM_EMAIL and E2E_PREMIUM_PASSWORD.");
+  await loginAs(page, premiumEmail!, premiumPassword!);
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("ad-slot-dashboard_top")).toHaveCount(0);
+  await page.goto("/settings/billing");
+  await expect(page.getByText("Current plan:")).toBeVisible();
+});
+
+test("downgrade to free restores limits and ads", async ({ page }) => {
+  test.skip(!freeEmail || !freePassword, "Set E2E_FREE_EMAIL and E2E_FREE_PASSWORD.");
+  await loginAs(page, freeEmail!, freePassword!);
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("ad-slot-dashboard_top")).toBeVisible();
+  await page.goto("/settings/billing");
+  await expect(page.getByText("Current plan:")).toBeVisible();
 });
