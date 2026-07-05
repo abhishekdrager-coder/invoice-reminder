@@ -2,9 +2,27 @@ import Stripe from "stripe";
 
 import { PLAN_CONFIG, type PlanId } from "@/config/plans";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder", {
-  apiVersion: "2026-06-24.dahlia",
-  typescript: true,
+export function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return null;
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2026-06-24.dahlia",
+    typescript: true,
+  });
+}
+
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, property) {
+    const client = getStripeClient();
+    if (!client) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const value = Reflect.get(client as object, property, client);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
 });
 
 export const planLimits = Object.fromEntries(

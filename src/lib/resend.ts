@@ -1,6 +1,12 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY ?? "re_placeholder");
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 type ReminderEmailParams = {
   to: string;
@@ -12,6 +18,11 @@ type ReminderEmailParams = {
 
 export async function sendReminderEmail({ to, subject, html, text, replyTo }: ReminderEmailParams) {
   if (!process.env.RESEND_API_KEY) {
+    return { id: `dev_${Date.now()}`, skipped: true };
+  }
+
+  const resend = getResendClient();
+  if (!resend) {
     return { id: `dev_${Date.now()}`, skipped: true };
   }
 

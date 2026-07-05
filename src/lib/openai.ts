@@ -2,10 +2,17 @@ import OpenAI from "openai";
 
 import type { ReminderTone } from "@/types";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "sk-placeholder" });
 const windowMs = 60_000;
 const maxRequestsPerWindow = 10;
 const requestBuckets = new Map<string, number[]>();
+
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 function consumeRateLimit(key: string) {
   const now = Date.now();
@@ -34,6 +41,11 @@ export async function rewriteEmailTone(params: {
   }
 
   if (!process.env.OPENAI_API_KEY) {
+    return { subject, body };
+  }
+
+  const openai = getOpenAIClient();
+  if (!openai) {
     return { subject, body };
   }
 
