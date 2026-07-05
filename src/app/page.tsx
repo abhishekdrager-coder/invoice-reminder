@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PLAN_ORDER, PLAN_CONFIG } from "@/config/plans";
+import { buildMetadata, getSiteUrl } from "@/lib/seo";
 import { formatCurrency } from "@/lib/utils";
+
+export const metadata: Metadata = buildMetadata({
+  title: "Automated Invoice Reminders for Faster Payments",
+  description: "Create invoices, automate reminders, and recover payments faster with Invoice Copilot.",
+  path: "/",
+  keywords: ["invoice reminders", "invoice automation", "accounts receivable", "payment follow-up"],
+});
 
 const features = [
   {
@@ -19,8 +28,28 @@ const features = [
 ];
 
 export default function HomePage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Invoice Copilot",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: getSiteUrl(),
+    description: "Create invoices, automate reminders, and recover payments faster.",
+    offers: PLAN_ORDER.map((planId) => {
+      const plan = PLAN_CONFIG[planId];
+      return {
+        "@type": "Offer",
+        name: plan.name,
+        price: plan.priceMonthly,
+        priceCurrency: "USD",
+      };
+    }),
+  };
+
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <section className="mx-auto flex max-w-7xl flex-col gap-14 px-6 py-20 lg:flex-row lg:items-center lg:px-8">
         <div className="max-w-3xl flex-1">
           <div className="mb-4 inline-flex rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
@@ -147,7 +176,7 @@ export default function HomePage() {
           <p>© {new Date().getFullYear()} Invoice Copilot. Recover revenue without awkward follow-ups.</p>
           <div className="flex gap-4">
             <Link href="/login">Login</Link>
-            <Link href="/signup">Start free</Link>
+            <Link href="/signup">Start free today</Link>
           </div>
         </div>
       </footer>
