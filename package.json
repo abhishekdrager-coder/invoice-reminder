@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "bash ./scripts/install-hooks.sh",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -14,6 +15,9 @@
     "test:e2e": "playwright test",
     "test:ci": "npm run lint && npm run typecheck && npm run test:unit && npm run test:integration",
     "test:ci:full": "npm run test:ci && npm run test:e2e",
+    "security:audit": "npm audit --audit-level=high",
+    "security:secrets-scan": "bash ./scripts/security-secrets-scan.sh",
+    "security:headers-check": "tsx ./scripts/security-headers-check.ts",
     "db:migrate": "./scripts/db-migrate.sh",
     "db:seed": "./scripts/db-seed.sh",
     "db:seed:test": "./scripts/db-seed-test.sh",

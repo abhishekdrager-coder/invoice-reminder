@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdminApiContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { AppError, handleRouteError } from "@/lib/errors/http";
+import { assertSameOrigin, enforceRequestSize } from "@/lib/request-security";
 import { adminReminderRetrySchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
+    enforceRequestSize(request, 8 * 1024);
+    assertSameOrigin(request);
     await requireAdminApiContext();
     const formData = await request.formData();
     const parsed = adminReminderRetrySchema.safeParse({

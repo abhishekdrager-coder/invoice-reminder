@@ -1,5 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isAllowlistModeEnabled, isEmailAllowlisted } from "@/lib/allowlist";
+
+function applySecurityHeaders(response: NextResponse) {
+  response.headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.openai.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=() ");
+  return response;
+}
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -12,6 +23,12 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -39,31 +56,45 @@ export async function middleware(request: NextRequest) {
   if (appPath && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return applySecurityHeaders(NextResponse.redirect(url));
   }
 
   if (user && appPath) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role,suspended")
+      .select("role,is_suspended,suspended,email")
       .eq("id", user.id)
       .single();
 
-    if (profile?.suspended) {
+    if (profile?.is_suspended ?? profile?.suspended) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("error", "Account suspended");
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url));
     }
 
-    if (request.nextUrl.pathname.startsWith("/admin") && profile?.role !== "admin") {
+    if (isAllowlistModeEnabled() && !isEmailAllowlisted(profile?.email ?? user.email ?? null)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "Access restricted in private beta mode");
+      return applySecurityHeaders(NextResponse.redirect(url));
+    }
+
+    if (request.nextUrl.pathname.startsWith("/admin/security") && profile?.role !== "owner") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/overview";
+      return applySecurityHeaders(NextResponse.redirect(url));
+    }
+
+    const role = (profile?.role ?? "user") as "user" | "admin" | "owner";
+    if (request.nextUrl.pathname.startsWith("/admin") && role !== "admin" && role !== "owner") {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url));
     }
   }
 
-  return response;
+  return applySecurityHeaders(response);
 }
 
 export const config = {

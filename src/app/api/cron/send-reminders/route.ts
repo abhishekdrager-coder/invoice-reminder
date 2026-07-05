@@ -8,6 +8,7 @@ import { defaultReminderTemplate } from "@/lib/reminder-template";
 import { PLAN_LIMITS, normalizePlan } from "@/lib/plans";
 import { AppError, handleRouteError } from "@/lib/errors/http";
 import { logAppError } from "@/lib/logger";
+import { assertAllowedCronIp } from "@/lib/request-security";
 
 type ReminderWithRelations = {
   id: string;
@@ -33,6 +34,8 @@ async function runCron(request: Request) {
     if (auth !== `Bearer ${env.CRON_SECRET}`) {
       throw new AppError("Unauthorized", 401, "unauthorized");
     }
+
+    assertAllowedCronIp(request);
 
     const nowIso = new Date().toISOString();
     const { data: dueReminders } = await supabaseAdmin

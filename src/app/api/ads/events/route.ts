@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { requireUserApiContext } from "@/lib/authorization";
 import { handleRouteError, AppError } from "@/lib/errors/http";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { assertSameOrigin, enforceRequestSize } from "@/lib/request-security";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { adEventSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
+    enforceRequestSize(request, 8 * 1024);
+    assertSameOrigin(request);
     const user = await requireUserApiContext();
     const ip = (request.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
     const gate = checkRateLimit(`ads:${user.userId}:${ip}`, 60, 60_000);

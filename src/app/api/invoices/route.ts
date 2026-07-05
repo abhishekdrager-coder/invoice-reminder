@@ -6,6 +6,7 @@ import { handleRouteError, AppError } from "@/lib/errors/http";
 import { invoiceSchema } from "@/lib/validation";
 import { sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { buildReminderSchedule } from "@/lib/reminder-schedule";
+import { assertSameOrigin, enforceRequestSize } from "@/lib/request-security";
 
 export async function GET() {
   try {
@@ -26,6 +27,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    enforceRequestSize(request, 32 * 1024);
+    assertSameOrigin(request);
     const user = await requireUserApiContext();
     const body = await request.json();
 
@@ -113,6 +116,8 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    enforceRequestSize(request, 16 * 1024);
+    assertSameOrigin(request);
     const user = await requireUserApiContext();
     const body = await request.json();
     const invoiceId = sanitizeText(body.invoiceId);

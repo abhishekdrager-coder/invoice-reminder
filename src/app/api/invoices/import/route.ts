@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import { buildUpgradeHint, checkInvoiceLimit } from "@/lib/quota";
 import { AppError, handleRouteError } from "@/lib/errors/http";
 import { buildReminderSchedule } from "@/lib/reminder-schedule";
+import { assertSameOrigin, enforceRequestSize } from "@/lib/request-security";
 import { sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { csvInvoiceSchema } from "@/lib/validation";
 
@@ -11,6 +12,8 @@ type Payload = { rows: unknown[] };
 
 export async function POST(request: Request) {
   try {
+    enforceRequestSize(request, 512 * 1024);
+    assertSameOrigin(request);
     const body = (await request.json()) as Payload;
     const userContext = await requireUserApiContext();
     const supabase = await createClient();
