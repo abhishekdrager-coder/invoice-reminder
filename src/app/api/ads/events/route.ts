@@ -22,7 +22,11 @@ export async function POST(request: Request) {
       throw new AppError("Invalid ad event payload", 400, "invalid_payload");
     }
 
-    await supabaseAdmin.from("ad_events").insert({
+    const admin = supabaseAdmin as unknown as {
+      from: (table: string) => { insert: (value: Record<string, unknown>) => Promise<unknown> };
+    };
+
+    await admin.from("ad_events").insert({
       profile_id: user.userId,
       user_id: user.userId,
       placement: parsed.data.placement,

@@ -4,8 +4,9 @@ import { env } from "@/lib/env";
 import { AppError, handleRouteError } from "@/lib/errors/http";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logAppError } from "@/lib/logger";
+import { requireStripeEnv } from "@/lib/env";
 import { assertSameOrigin, enforceRequestSize, getClientIp } from "@/lib/request-security";
-import { stripe } from "@/lib/stripe";
+import { getStripeClient } from "@/lib/stripe";
 import { stripeCheckoutSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -53,10 +54,12 @@ export async function POST(request: Request) {
       }
     }
 
+    const stripe = getStripeClient();
+    const { STRIPE_PREMIUM_LITE_PRICE_ID, STRIPE_PREMIUM_PRO_PRICE_ID } = requireStripeEnv();
     const priceId =
       plan === "premium_pro"
-        ? env.STRIPE_PREMIUM_PRO_PRICE_ID
-        : env.STRIPE_PREMIUM_LITE_PRICE_ID;
+        ? STRIPE_PREMIUM_PRO_PRICE_ID
+        : STRIPE_PREMIUM_LITE_PRICE_ID;
 
     const idempotencyKey = request.headers.get("x-idempotency-key")
       ?? `checkout:${user.userId}:${plan}:${Math.floor(Date.now() / 30_000)}`;

@@ -25,7 +25,15 @@ export async function POST(request: Request) {
       throw new AppError("Owner role cannot be changed", 400, "owner_role_locked");
     }
 
-    await supabaseAdmin
+    const admin = supabaseAdmin as unknown as {
+      from: (table: string) => {
+        update: (value: Record<string, unknown>) => {
+          eq: (column: string, value: unknown) => { neq: (column: string, value: unknown) => Promise<unknown> };
+        };
+      };
+    };
+
+    await admin
       .from("profiles")
       .update({ role: parsed.data.role })
       .eq("id", parsed.data.profileId)

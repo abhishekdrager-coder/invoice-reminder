@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { openai } from "@/lib/openai";
+import { getOpenAIClient } from "@/lib/openai";
 import { env } from "@/lib/env";
 import { requireUserApiContext } from "@/lib/authorization";
 import { handleRouteError } from "@/lib/errors/http";
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
+    const openai = getOpenAIClient();
     const completion = await openai.responses.create({
       model: env.OPENAI_MODEL,
       input: [

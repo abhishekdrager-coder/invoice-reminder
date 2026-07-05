@@ -1,4 +1,15 @@
 import { Resend } from "resend";
-import { env } from "@/lib/env";
+import { requireEmailEnv } from "@/lib/env";
 
-export const resend = new Resend(env.RESEND_API_KEY);
+export function getResendClient() {
+	const { RESEND_API_KEY } = requireEmailEnv();
+	return new Resend(RESEND_API_KEY);
+}
+
+export const resend = new Proxy({} as Resend, {
+	get(_target, property) {
+		const client = getResendClient();
+		const value = Reflect.get(client as object, property, client);
+		return typeof value === "function" ? value.bind(client) : value;
+	},
+});

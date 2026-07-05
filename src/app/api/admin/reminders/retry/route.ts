@@ -18,7 +18,15 @@ export async function POST(request: Request) {
       throw new AppError("Invalid payload", 400, "invalid_payload");
     }
 
-    await supabaseAdmin
+    const admin = supabaseAdmin as unknown as {
+      from: (table: string) => {
+        update: (value: Record<string, unknown>) => {
+          eq: (column: string, value: unknown) => { eq: (column: string, value: unknown) => Promise<unknown> };
+        };
+      };
+    };
+
+    await admin
       .from("reminders")
       .update({ status: "pending", failure_reason: null, processing_at: null })
       .eq("id", parsed.data.reminderId)

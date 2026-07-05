@@ -3,8 +3,8 @@ import { requireUserApiContext } from "@/lib/authorization";
 import { env } from "@/lib/env";
 import { AppError, handleRouteError } from "@/lib/errors/http";
 import { assertSameOrigin, enforceRequestSize } from "@/lib/request-security";
-import { stripe } from "@/lib/stripe";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getStripeClient } from "@/lib/stripe";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +12,8 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
 
     const user = await requireUserApiContext();
+  const supabaseAdmin = getSupabaseAdminClient();
+  const stripe = getStripeClient();
 
     const { data: subscription } = await supabaseAdmin
       .from("subscriptions")

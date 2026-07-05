@@ -24,7 +24,21 @@ export async function POST(request: Request) {
       throw new AppError("Invalid inbound payload", 400, "invalid_payload");
     }
 
-    const { data: invoice } = await supabaseAdmin
+    const admin = supabaseAdmin as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (column: string, value: unknown) => { single: () => Promise<{ data: { id: string } | null }> };
+        };
+        insert: (value: Record<string, unknown>) => Promise<unknown>;
+        update: (value: Record<string, unknown>) => {
+          eq: (column: string, value: unknown) => {
+            eq: (column: string, value: unknown) => Promise<unknown>;
+          };
+        };
+      };
+    };
+
+    const { data: invoice } = await admin
       .from("invoices")
       .select("id")
       .eq("id", parsed.data.invoiceId)
@@ -36,26 +50,26 @@ export async function POST(request: Request) {
 
     const intent = detectIntent(parsed.data.text);
 
-    await supabaseAdmin.from("inbound_replies").insert({
+    await admin.from("inbound_replies").insert({
       invoice_id: parsed.data.invoiceId,
       from_email: parsed.data.fromEmail ?? null,
       body_text: parsed.data.text,
       intent,
     });
 
-    await supabaseAdmin
+    await admin
       .from("reminders")
       .update({ intent_outcome: intent })
       .eq("invoice_id", parsed.data.invoiceId)
       .eq("status", "sent");
 
     if (intent === "paid") {
-      await supabaseAdmin
+      await admin
         .from("invoices")
         .update({ status: "paid", paid_at: new Date().toISOString() })
         .eq("id", parsed.data.invoiceId);
 
-      await supabaseAdmin
+      await admin
         .from("reminders")
         .update({ status: "skipped", failure_reason: "Auto-stopped after paid reply" })
         .eq("invoice_id", parsed.data.invoiceId)
