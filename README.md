@@ -55,8 +55,9 @@ cp .env.example .env.local
 - SUPABASE_SERVICE_ROLE_KEY
 - STRIPE_SECRET_KEY
 - STRIPE_WEBHOOK_SECRET
-- NEXT_PUBLIC_STRIPE_PREMIUM_LITE_PRICE_ID
-- NEXT_PUBLIC_STRIPE_PREMIUM_PRO_PRICE_ID
+- STRIPE_PREMIUM_LITE_PRICE_ID
+- STRIPE_PREMIUM_PRO_PRICE_ID
+- STRIPE_WEBHOOK_TOLERANCE_SECONDS
 - RESEND_API_KEY
 - EMAIL_FROM
 - OPENAI_API_KEY
@@ -64,7 +65,15 @@ cp .env.example .env.local
 - CRON_SECRET
 - INBOUND_SECRET
 - SHOW_ADS
+- CRON_ALLOWLIST_IPS
+- ALLOWLIST_MODE
+- ALLOWLIST_EMAILS
+- CSRF_SECRET
+- BILLING_CHALLENGE_ENABLED
+- BILLING_CHALLENGE_THRESHOLD
+- BILLING_CHALLENGE_TOKEN
 - ADMIN_BOOTSTRAP_EMAIL (optional)
+- OWNER_ADMIN_EMAIL (optional)
 
 ## Database Migrations and Seed
 
@@ -133,8 +142,8 @@ Configure your scheduler (Vercel Cron, GitHub Actions, or external scheduler) to
 ## Stripe Setup
 
 1. Create two recurring prices in Stripe:
-- Premium Lite (maps to NEXT_PUBLIC_STRIPE_PREMIUM_LITE_PRICE_ID)
-- Premium Pro (maps to NEXT_PUBLIC_STRIPE_PREMIUM_PRO_PRICE_ID)
+- Premium Lite (maps to STRIPE_PREMIUM_LITE_PRICE_ID)
+- Premium Pro (maps to STRIPE_PREMIUM_PRO_PRICE_ID)
 
 2. Add webhook endpoint:
 
@@ -174,3 +183,9 @@ CI workflow is in .github/workflows/ci.yml and runs:
 - unit tests
 - integration tests
 - Playwright setup and e2e tests
+
+## Security and Payments Docs
+
+- FINAL_VERIFICATION.md
+- PAYMENTS_SECURITY.md
+- SECURITY_RUNBOOK.md
