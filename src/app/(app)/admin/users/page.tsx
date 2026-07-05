@@ -1,10 +1,26 @@
 import { requireAdminContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: { q?: string } }) {
-  const user = await requireAdminContext();
+type AdminUserRow = {
+  id: string;
+  email: string;
+  created_at: string;
+  last_active_at: string | null;
+  role: "user" | "admin" | "owner";
+  is_suspended: boolean | null;
+  suspended: boolean | null;
+  subscriptions?: Array<{ plan: string | null }> | null;
+};
 
-  const query = searchParams.q?.trim();
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const user = await requireAdminContext();
+  const resolvedSearchParams = await searchParams;
+
+  const query = resolvedSearchParams.q?.trim();
   let request = supabaseAdmin
     .from("profiles")
     .select("id,email,created_at,last_active_at,role,is_suspended,suspended,subscriptions(plan)")
@@ -15,7 +31,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: {
     request = request.ilike("email", `%${query}%`);
   }
 
-  const { data: users } = await request;
+  const { data: usersData } = await request;
+  const users = (usersData ?? []) as AdminUserRow[];
 
   return (
     <div className="space-y-5">
@@ -40,7 +57,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: {
             </tr>
           </thead>
           <tbody>
-            {(users ?? []).map((u) => {
+            {users.map((u) => {
                 const suspended = u.is_suspended ?? u.suspended ?? false;
                 return (
                   <tr key={u.id} className="border-t border-stone-200">

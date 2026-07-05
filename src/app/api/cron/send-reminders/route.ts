@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
-import { env } from "@/lib/env";
+import { env, requireCronEnv, requireEmailEnv } from "@/lib/env";
 import { resend } from "@/lib/resend";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { withBackoff } from "@/lib/retries/backoff";
@@ -28,17 +28,37 @@ type ReminderWithRelations = {
   }>;
 };
 
+type AdminQuery = {
+  select: (columns: string, options?: { count?: string; head?: boolean }) => AdminQuery;
+  update: (values: Record<string, unknown>) => AdminQuery;
+  eq: (column: string, value: unknown) => AdminQuery;
+  lte: (column: string, value: unknown) => AdminQuery;
+  gte: (column: string, value: unknown) => AdminQuery;
+  in: (column: string, values: unknown[]) => AdminQuery;
+  is: (column: string, value: unknown) => AdminQuery;
+  limit: (value: number) => Promise<{ data: unknown[] | null }>;
+  maybeSingle: () => Promise<{ data: unknown | null; error?: { message: string } | null }>;
+};
+
+type AdminClient = {
+  from: (table: string) => AdminQuery;
+};
+
 async function runCron(request: Request) {
   try {
+    const { CRON_SECRET } = requireCronEnv();
+    const { EMAIL_FROM } = requireEmailEnv();
     const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${env.CRON_SECRET}`) {
+    if (auth !== `Bearer ${CRON_SECRET}`) {
       throw new AppError("Unauthorized", 401, "unauthorized");
     }
 
     assertAllowedCronIp(request);
 
+    const admin = supabaseAdmin as unknown as AdminClient;
+
     const nowIso = new Date().toISOString();
-    const { data: dueReminders } = await supabaseAdmin
+    const { data: dueReminders } = await admin
       .from("reminders")
       .select(
         "id,profile_id,idempotency_key,invoices(amount_cents,due_date,status,clients(name,email)),profiles(default_tone)",
@@ -47,14 +67,14 @@ async function runCron(request: Request) {
       .lte("scheduled_for", nowIso)
       .limit(100);
 
-    const reminders = (dueReminders ?? []) as unknown as ReminderWithRelations[];
+    const reminders = (dueReminders ?? []) as ReminderWithRelations[];
     const sent: string[] = [];
     const skipped: string[] = [];
     const blockedByPlan: string[] = [];
     const planCache = new Map<string, "free" | "premium_lite" | "premium_pro">();
 
     for (const reminder of reminders) {
-      const { data: claimed, error: claimError } = await supabaseAdmin
+      const { data: claimed, error: claimError } = await admin
         .from("reminders")
         .update({ status: "processing", processing_at: new Date().toISOString() })
         .eq("id", reminder.id)
@@ -80,7 +100,7 @@ async function runCron(request: Request) {
       const client = invoice?.clients?.[0];
 
       if (!invoice || !client || invoice.status !== "unpaid") {
-        await supabaseAdmin
+        await admin
           .from("reminders")
           .update({ status: "skipped", failure_reason: "Invoice is not unpaid", processing_at: null })
           .eq("id", reminder.id)
@@ -91,27 +111,29 @@ async function runCron(request: Request) {
 
       let plan = planCache.get(reminder.profile_id);
       if (!plan) {
-        const { data: sub } = await supabaseAdmin
+        const { data: subData } = await admin
           .from("subscriptions")
           .select("plan,status")
           .eq("profile_id", reminder.profile_id)
           .in("status", ["active", "trialing"])
           .maybeSingle();
 
+        const sub = (subData ?? null) as { plan?: string } | null;
+
         plan = normalizePlan(sub?.plan);
         planCache.set(reminder.profile_id, plan);
       }
 
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-      const { count: sentThisMonth } = await supabaseAdmin
+      const { count: sentThisMonth } = await (admin
         .from("reminders")
         .select("id", { count: "exact", head: true })
         .eq("profile_id", reminder.profile_id)
         .eq("status", "sent")
-        .gte("sent_at", monthStart);
+        .gte("sent_at", monthStart) as unknown as Promise<{ count: number | null }>);
 
       if ((sentThisMonth ?? 0) >= PLAN_LIMITS[plan].remindersPerMonth) {
-        await supabaseAdmin
+        await admin
           .from("reminders")
           .update({ status: "failed", failure_reason: "Monthly reminder limit reached. Upgrade: /settings/billing", processing_at: null })
           .eq("id", reminder.id)
@@ -148,7 +170,7 @@ async function runCron(request: Request) {
       const { error: emailError } = await withBackoff(
         () =>
           resend.emails.send({
-            from: env.EMAIL_FROM,
+            from: EMAIL_FROM,
             to: [client.email],
             subject: templated.subject,
             text: body,
@@ -168,7 +190,7 @@ async function runCron(request: Request) {
           profileId: reminder.profile_id,
           metadata: { reminderId: reminder.id, error: emailError.message },
         });
-        await supabaseAdmin
+        await admin
           .from("reminders")
           .update({ status: "failed", failure_reason: emailError.message, processing_at: null })
           .eq("id", reminder.id)
@@ -176,11 +198,11 @@ async function runCron(request: Request) {
         continue;
       }
 
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await (admin
         .from("reminders")
         .update({ status: "sent", sent_at: new Date().toISOString(), final_subject: templated.subject, final_body: body, processing_at: null })
         .eq("id", reminder.id)
-        .eq("status", "processing");
+        .eq("status", "processing") as unknown as Promise<{ error?: { message: string } | null }>);
 
       if (!updateError) {
         sent.push(reminder.id);

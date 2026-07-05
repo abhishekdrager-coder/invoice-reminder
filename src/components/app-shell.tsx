@@ -6,12 +6,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/dashboard" className="text-lg font-semibold tracking-tight">
-            Invoice Copilot
+            NudgePay
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/dashboard" className="hover:text-sky-700">Dashboard</Link>
             <Link href="/invoices" className="hover:text-sky-700">Invoices</Link>
             <Link href="/settings/reminders" className="hover:text-sky-700">Reminders</Link>
+            <Link href="/settings/business-profile" className="hover:text-sky-700">Business Profile</Link>
             <Link href="/settings/billing" className="hover:text-sky-700">Billing</Link>
             <Link href="/admin/overview" className="hover:text-sky-700">Admin</Link>
             <form action="/api/auth/logout" method="POST">

@@ -1,23 +1,33 @@
 import { requireAdminContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type BillingSubscriptionRow = {
+  id: string;
+  plan: string;
+  status: string;
+  current_period_end: string | null;
+  profiles?: Array<{ email: string | null }> | null;
+};
+
 export default async function AdminBillingPage() {
   await requireAdminContext();
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: subscriptions } = await supabaseAdmin
+  const { data: subscriptionsData } = await supabaseAdmin
     .from("subscriptions")
     .select("id,plan,status,current_period_end,profiles(email)")
     .order("updated_at", { ascending: false })
     .limit(300);
 
-  const failed = (subscriptions ?? []).filter((s) => !["active", "trialing"].includes(s.status));
-  const active = (subscriptions ?? []).filter((s) => s.status === "active");
+  const subscriptions = (subscriptionsData ?? []) as BillingSubscriptionRow[];
+
+  const failed = subscriptions.filter((s) => !["active", "trialing"].includes(s.status));
+  const active = subscriptions.filter((s) => s.status === "active");
   const activeLite = active.filter((s) => s.plan === "premium_lite").length;
   const activePro = active.filter((s) => s.plan === "premium_pro").length;
-  const churned30d = (subscriptions ?? []).filter(
+  const churned30d = subscriptions.filter(
     (s) => ["canceled", "incomplete_expired"].includes(s.status) && s.current_period_end && s.current_period_end >= thirtyDaysAgo,
   ).length;
 
@@ -52,7 +62,7 @@ export default async function AdminBillingPage() {
             </tr>
           </thead>
           <tbody>
-            {(subscriptions ?? []).map((s) => (
+            {subscriptions.map((s) => (
               <tr key={s.id} className="border-t border-stone-200">
                 <td className="px-3 py-2">{s.profiles?.[0]?.email}</td>
                 <td className="px-3 py-2 capitalize">{s.plan}</td>

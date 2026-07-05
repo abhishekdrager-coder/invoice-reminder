@@ -1,13 +1,24 @@
 import { requireAdminContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type AdminInvoiceRow = {
+  id: string;
+  amount_cents: number;
+  due_date: string;
+  status: string;
+  profiles?: Array<{ email: string | null }> | null;
+  clients?: Array<{ name: string | null; email: string | null }> | null;
+};
+
 export default async function AdminInvoicesPage() {
   await requireAdminContext();
-  const { data: invoices } = await supabaseAdmin
+  const { data: invoicesData } = await supabaseAdmin
     .from("invoices")
     .select("id,amount_cents,due_date,status,invoice_number,profiles(email),clients(name,email)")
     .order("created_at", { ascending: false })
     .limit(200);
+
+  const invoices = (invoicesData ?? []) as AdminInvoiceRow[];
 
   return (
     <div className="space-y-5">
@@ -24,7 +35,7 @@ export default async function AdminInvoicesPage() {
             </tr>
           </thead>
           <tbody>
-            {(invoices ?? []).map((inv) => (
+            {invoices.map((inv) => (
               <tr key={inv.id} className="border-t border-stone-200">
                 <td className="px-3 py-2">{inv.profiles?.[0]?.email}</td>
                 <td className="px-3 py-2">{inv.clients?.[0]?.name} ({inv.clients?.[0]?.email})</td>

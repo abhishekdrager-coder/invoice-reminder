@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { env } from "@/lib/env";
+import { requireStripeEnv } from "@/lib/env";
 import { handleRouteError } from "@/lib/errors/http";
 import { logAppError } from "@/lib/logger";
 import {
@@ -12,13 +12,23 @@ import {
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function mapPriceIdToPlan(priceId: string | null | undefined) {
-  if (priceId === env.STRIPE_PREMIUM_PRO_PRICE_ID) return "premium_pro";
-  if (priceId === env.STRIPE_PREMIUM_LITE_PRICE_ID) return "premium_lite";
+  const { STRIPE_PREMIUM_PRO_PRICE_ID, STRIPE_PREMIUM_LITE_PRICE_ID } = requireStripeEnv();
+  if (priceId === STRIPE_PREMIUM_PRO_PRICE_ID) return "premium_pro";
+  if (priceId === STRIPE_PREMIUM_LITE_PRICE_ID) return "premium_lite";
   return "free";
 }
 
 export async function POST(request: Request) {
   try {
+    const admin = supabaseAdmin as unknown as {
+      from: (table: string) => {
+        upsert: (value: Record<string, unknown>) => Promise<{ error?: { message: string } | null }>;
+        update: (value: Record<string, unknown>) => {
+          eq: (column: string, value: unknown) => Promise<{ error?: { message: string } | null }>;
+        };
+      };
+    };
+
     const body = await request.text();
     const signature = (await headers()).get("stripe-signature");
 
@@ -51,7 +61,7 @@ export async function POST(request: Request) {
       const plan = session.metadata?.plan === "premium_pro" ? "premium_pro" : session.metadata?.plan === "premium_lite" ? "premium_lite" : "free";
 
       if (profileId) {
-        const { error } = await supabaseAdmin.from("subscriptions").upsert({
+        const { error } = await admin.from("subscriptions").upsert({
           profile_id: profileId,
           user_id: profileId,
           stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
@@ -80,7 +90,7 @@ export async function POST(request: Request) {
         ? "free"
         : mapPriceIdToPlan(item?.price?.id);
 
-      const { error } = await supabaseAdmin
+      const { error } = await admin
         .from("subscriptions")
         .update({
           status,

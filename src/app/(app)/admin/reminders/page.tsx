@@ -1,14 +1,25 @@
 import { requireAdminContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type AdminReminderRow = {
+  id: string;
+  status: string;
+  failure_reason: string | null;
+  scheduled_for: string;
+  profiles?: Array<{ email: string | null }> | null;
+  invoices?: Array<{ invoice_number: string | null }> | null;
+};
+
 export default async function AdminRemindersPage() {
   await requireAdminContext();
-  const { data: reminders } = await supabaseAdmin
+  const { data: remindersData } = await supabaseAdmin
     .from("reminders")
     .select("id,status,failure_reason,scheduled_for,sent_at,profiles(email),invoices(invoice_number)")
     .in("status", ["sent", "failed"]) 
     .order("scheduled_for", { ascending: false })
     .limit(200);
+
+  const reminders = (remindersData ?? []) as AdminReminderRow[];
 
   return (
     <div className="space-y-5">
@@ -26,7 +37,7 @@ export default async function AdminRemindersPage() {
             </tr>
           </thead>
           <tbody>
-            {(reminders ?? []).map((r) => (
+            {reminders.map((r) => (
               <tr key={r.id} className="border-t border-stone-200">
                 <td className="px-3 py-2">{r.profiles?.[0]?.email}</td>
                 <td className="px-3 py-2">{r.invoices?.[0]?.invoice_number ?? "-"}</td>

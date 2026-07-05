@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { env } from "@/lib/env";
+import { env, requireStripeEnv } from "@/lib/env";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { AppError } from "@/lib/errors/http";
@@ -13,11 +13,12 @@ export const STRIPE_ALLOWED_WEBHOOK_EVENTS = new Set<Stripe.Event.Type>([
 ]);
 
 export function verifyStripeWebhookEvent(body: string, signature: string) {
+  const { STRIPE_WEBHOOK_SECRET } = requireStripeEnv();
   try {
     return stripe.webhooks.constructEvent(
       body,
       signature,
-      env.STRIPE_WEBHOOK_SECRET,
+      STRIPE_WEBHOOK_SECRET,
       env.STRIPE_WEBHOOK_TOLERANCE_SECONDS,
     );
   } catch {
@@ -26,7 +27,11 @@ export function verifyStripeWebhookEvent(body: string, signature: string) {
 }
 
 export async function reserveWebhookEventId(eventId: string) {
-  const { error } = await supabaseAdmin
+  const admin = supabaseAdmin as unknown as {
+    from: (table: string) => { insert: (value: Record<string, unknown>) => Promise<{ error?: { code?: string; message?: string } | null }> };
+  };
+
+  const { error } = await admin
     .from("stripe_webhook_events")
     .insert({ event_id: eventId, processed_at: new Date().toISOString() });
 

@@ -2,6 +2,19 @@ import { subDays } from "date-fns";
 import { requireAdminContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type ProfileRefRow = { profile_id: string };
+type InvoiceStatusRow = {
+  amount_cents: number;
+  due_date: string;
+  status: string;
+  paid_at: string | null;
+};
+type SubscriptionRow = {
+  plan: string;
+  status: string;
+  current_period_end: string | null;
+};
+
 export default async function AdminOverviewPage() {
   await requireAdminContext();
 
@@ -15,44 +28,49 @@ export default async function AdminOverviewPage() {
     supabaseAdmin.from("reminders").select("id", { count: "exact", head: true }).eq("status", "sent").gte("sent_at", thirtyDaysAgo),
   ]);
 
-  const [{ data: activeInvoiceProfiles }, { data: activeReminderProfiles }, { data: paidInvoicesData }, { data: dueInvoicesData }] = await Promise.all([
+  const [{ data: activeInvoiceProfilesData }, { data: activeReminderProfilesData }, { data: paidInvoicesData }, { data: dueInvoicesData }] = await Promise.all([
     supabaseAdmin.from("invoices").select("profile_id").gte("created_at", sevenDaysAgo),
     supabaseAdmin.from("reminders").select("profile_id").gte("created_at", sevenDaysAgo),
     supabaseAdmin.from("invoices").select("id").eq("status", "paid").gte("paid_at", thirtyDaysAgo),
     supabaseAdmin.from("invoices").select("id").gte("due_date", thirtyDaysAgo.slice(0, 10)),
   ]);
 
+  const activeInvoiceProfiles = (activeInvoiceProfilesData ?? []) as ProfileRefRow[];
+  const activeReminderProfiles = (activeReminderProfilesData ?? []) as ProfileRefRow[];
+
   const activeUsers = new Set([
-    ...(activeInvoiceProfiles ?? []).map((r) => r.profile_id),
-    ...(activeReminderProfiles ?? []).map((r) => r.profile_id),
+    ...activeInvoiceProfiles.map((r) => r.profile_id),
+    ...activeReminderProfiles.map((r) => r.profile_id),
   ]).size;
 
   const activationRate = totalUsers && totalUsers > 0
-    ? (((activeInvoiceProfiles ?? []).length / totalUsers) * 100)
+    ? ((activeInvoiceProfiles.length / totalUsers) * 100)
     : 0;
 
   const paidCount30d = paidInvoicesData?.length ?? 0;
   const dueCount30d = dueInvoicesData?.length ?? 0;
   const recoveryRate30d = dueCount30d > 0 ? (paidCount30d / dueCount30d) * 100 : 0;
 
-  const { data: outstandingRows } = await supabaseAdmin
+  const { data: outstandingRowsData } = await supabaseAdmin
     .from("invoices")
     .select("amount_cents,due_date,status,paid_at")
     .in("status", ["unpaid", "paid"]);
 
-  const outstandingAmount = (outstandingRows ?? [])
+  const outstandingRows = (outstandingRowsData ?? []) as InvoiceStatusRow[];
+
+  const outstandingAmount = outstandingRows
     .filter((row) => row.status === "unpaid")
     .reduce((sum, row) => sum + row.amount_cents, 0) / 100;
 
-  const overdueAmount = (outstandingRows ?? [])
+  const overdueAmount = outstandingRows
     .filter((row) => row.status === "unpaid" && row.due_date < new Date().toISOString().slice(0, 10))
     .reduce((sum, row) => sum + row.amount_cents, 0) / 100;
 
-  const recovered30d = (outstandingRows ?? [])
+  const recovered30d = outstandingRows
     .filter((row) => row.status === "paid" && row.paid_at && row.paid_at >= thirtyDaysAgo)
     .reduce((sum, row) => sum + row.amount_cents, 0) / 100;
 
-  const [{ count: remindersCreated30d }, { count: remindersFailed30d }, { data: subscriptions }] = await Promise.all([
+  const [{ count: remindersCreated30d }, { count: remindersFailed30d }, { data: subscriptionsData }] = await Promise.all([
     supabaseAdmin.from("reminders").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgo),
     supabaseAdmin.from("reminders").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", thirtyDaysAgo),
     supabaseAdmin.from("subscriptions").select("plan,status,current_period_end").limit(500),
@@ -62,7 +80,8 @@ export default async function AdminOverviewPage() {
     ? ((remindersFailed30d ?? 0) / (remindersCreated30d ?? 1)) * 100
     : 0;
 
-  const activeSubscriptions = (subscriptions ?? []).filter((s) => s.status === "active");
+  const subscriptions = (subscriptionsData ?? []) as SubscriptionRow[];
+  const activeSubscriptions = subscriptions.filter((s) => s.status === "active");
   const mrr = activeSubscriptions.reduce((sum, s) => {
     if (s.plan === "premium_lite") return sum + 9;
     if (s.plan === "premium_pro") return sum + 19;
@@ -70,7 +89,7 @@ export default async function AdminOverviewPage() {
   }, 0);
 
   const freeToPaid = (totalUsers ?? 0) > 0 ? (activeSubscriptions.length / (totalUsers ?? 1)) * 100 : 0;
-  const churned30d = (subscriptions ?? []).filter(
+  const churned30d = subscriptions.filter(
     (s) => ["canceled", "incomplete_expired"].includes(s.status) && s.current_period_end && s.current_period_end >= thirtyDaysAgo,
   ).length;
 

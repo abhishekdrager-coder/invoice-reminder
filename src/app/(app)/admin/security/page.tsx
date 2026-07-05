@@ -1,14 +1,24 @@
 import { requireOwnerContext } from "@/lib/authorization";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type SecurityUserRow = {
+  id: string;
+  email: string;
+  role: "user" | "admin" | "owner";
+  is_suspended: boolean | null;
+  suspended: boolean | null;
+};
+
 export default async function AdminSecurityPage() {
   await requireOwnerContext();
 
-  const { data: users } = await supabaseAdmin
+  const { data: usersData } = await supabaseAdmin
     .from("profiles")
     .select("id,email,role,is_suspended,suspended")
     .order("created_at", { ascending: false })
     .limit(200);
+
+  const users = (usersData ?? []) as SecurityUserRow[];
 
   return (
     <div className="space-y-5">
@@ -25,7 +35,7 @@ export default async function AdminSecurityPage() {
             </tr>
           </thead>
           <tbody>
-            {(users ?? []).map((u) => {
+            {users.map((u) => {
               const suspended = u.is_suspended ?? u.suspended ?? false;
               const promoteTarget = u.role === "admin" ? "user" : "admin";
 

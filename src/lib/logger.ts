@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 type LogLevel = "info" | "warn" | "error";
 
@@ -10,6 +10,7 @@ export async function logAppError(input: {
   metadata?: Record<string, unknown>;
 }) {
   try {
+    const supabaseAdmin = getSupabaseAdminClient();
     await supabaseAdmin.from("app_logs").insert({
       level: input.level,
       context: input.context,
