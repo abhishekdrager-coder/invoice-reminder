@@ -20,7 +20,7 @@ export default async function NewInvoicePage() {
     supabase.from("invoices").select("invoice_number").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
 
-  const lastNumber = Number(lastInvoiceResponse.data?.invoice_number?.replace(/\D/g, "") || 0) + 1;
+  const lastNumber = Number((lastInvoiceResponse.data?.invoice_number ?? "").replace(/\D/g, "") || "0") + 1;
   const suggestedNumber = `INV-${format(new Date(), "yyyy")}-${String(lastNumber).padStart(4, "0")}`;
 
   return (
