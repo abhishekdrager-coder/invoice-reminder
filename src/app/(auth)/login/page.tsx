@@ -2,12 +2,27 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { Button } from "@/components/ui/button";
+import { assertAllowlistedEmail, isAllowlistModeEnabled } from "@/lib/allowlist";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
   async function login(formData: FormData) {
     "use server";
-    const email = String(formData.get("email") ?? "");
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
+
+    try {
+      assertAllowlistedEmail(email);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Access blocked";
+      redirect(`/login?error=${encodeURIComponent(message)}`);
+    }
+
+    const gate = checkRateLimit(`login:${email}`, 8, 10 * 60_000);
+    if (!gate.allowed) {
+      redirect("/login?error=Too many login attempts. Please try again later.");
+    }
+
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -20,6 +35,10 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
 
   async function signInWithGoogle() {
     "use server";
+    if (isAllowlistModeEnabled()) {
+      redirect("/login?error=Google sign-in disabled in private beta mode");
+    }
+
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

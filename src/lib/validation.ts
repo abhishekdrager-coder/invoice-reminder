@@ -36,6 +36,11 @@ export const adminUserToggleSchema = z.object({
   suspended: z.boolean(),
 });
 
+export const adminRoleUpdateSchema = z.object({
+  profileId: cleanString.uuid(),
+  role: z.enum(["user", "admin"]),
+});
+
 export const adminReminderRetrySchema = z.object({
   reminderId: cleanString.uuid(),
 });

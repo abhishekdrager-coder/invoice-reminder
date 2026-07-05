@@ -8,8 +8,9 @@ export interface ProfileRow {
   id: string;
   email: string;
   full_name: string | null;
-  role: "user" | "admin";
-  suspended: boolean;
+  role: "user" | "admin" | "owner";
+  is_suspended: boolean;
+  suspended?: boolean;
   last_active_at: string | null;
   default_tone: Tone;
   created_at: string;

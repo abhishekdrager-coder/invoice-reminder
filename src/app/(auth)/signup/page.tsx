@@ -2,13 +2,22 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { Button } from "@/components/ui/button";
+import { assertAllowlistedEmail } from "@/lib/allowlist";
 
 export default function SignupPage({ searchParams }: { searchParams: { error?: string; success?: string } }) {
   async function signup(formData: FormData) {
     "use server";
-    const email = String(formData.get("email") ?? "");
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
     const fullName = String(formData.get("fullName") ?? "");
+
+    try {
+      assertAllowlistedEmail(email);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Access blocked";
+      redirect(`/signup?error=${encodeURIComponent(message)}`);
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase.auth.signUp({
